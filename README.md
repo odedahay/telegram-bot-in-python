@@ -15,7 +15,7 @@ This is an exercise for building Chatbot using Telegram API with Python in webho
 ##### And not yet deploy to my GAE console:
 ##### https://notebook-1263.appspot.com/
 
-### This Chatbot they have 4 section
+### The Chatbot have 4 sections
 
 1. Find a Table
 2. Check Reserved Table
