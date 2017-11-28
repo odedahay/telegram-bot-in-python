@@ -1,18 +1,18 @@
 import requests
 import datetime
 import time
-from time import sleep
-
-from pprint import pprint
 import json
+
+from time import sleep
+from pprint import pprint
 
 from news_update_bot import get_news
 from temp_update_bot import get_temp
-
+from table_update_bot import insert_Record
+from table_update_bot import get_Record
 
 token = "471852578:AAHbdwKjl_wjCPD2GCsu1DnKcg8FD9DfRdA"
 url = 'https://api.telegram.org/bot{}/'.format(token)
-greetings = ('hello', 'hi', 'greetings', 'sup', 'olah')
 
 def getme():
     res = requests.get(url + "getme")
@@ -101,7 +101,6 @@ def reply_markup_maker(data):
     reply_markup = {"keyboard": keyboard, "one_time_keyboard": True}
     return json.dumps(reply_markup)
 
-
 def news_bot(chat_id, update_id, last_chat_name):
     message = 'Please select below'
     commands = ['View Top News', 'Go Back']
@@ -118,14 +117,15 @@ def news_bot(chat_id, update_id, last_chat_name):
     if text.lower() == 'view top news':
         message = ''
         news = get_news()
-        for i, n in enumerate(news[:10], 1):
+
+        for i, n in enumerate(news[0:5], 1):
             message += str(i) + ". " + n.text + '\n\n'
+
         send_message(chat_id, message)
 
     if text.lower() == 'go back':
         text = 'start'
         menu(chat_id, text, update_id, last_chat_name)
-
 
 def weather_bot(chat_id, update_id, last_chat_name):
     message = 'Please select below'
@@ -138,7 +138,6 @@ def weather_bot(chat_id, update_id, last_chat_name):
     while text.lower() == 'weather':
         chat_id, text, update_id,last_chat_name = get_last_id_text(get_updates(update_id + 1))
         sleep(0.5)
-    print(text)
 
     if text.lower() == 'check weather':
 
@@ -152,31 +151,78 @@ def weather_bot(chat_id, update_id, last_chat_name):
         menu(chat_id, text, update_id, last_chat_name)
 
 def welcome_bot(chat_id, commands, last_chat_name):
-    text = "Welcome {}".format(last_chat_name)
-    send_message(chat_id, text)
-    text = '{}, Please select below'.format(last_chat_name)
+    text = 'Hi {}, Please select from the menu, below'.format(last_chat_name)
     reply_markup = reply_markup_maker(commands)
     send_message(chat_id, text, reply_markup)
 
+def successful_notes(chat_id,last_chat_name):
+    text = "OMG! Successfully booked"
+    send_message(chat_id, text)
 
 def start_bot(chat_id, last_chat_name):
-    message = 'Hello! {}'.format(last_chat_name)
-    reply_markup = reply_markup_maker(['Start'])
-    send_message(chat_id, message, reply_markup)
+
+    message = 'Olah! {}'.format(last_chat_name)
+    reply_markup = reply_markup_maker(['English', 'Tagalog'])
+    send_message(chat_id,message,reply_markup)
 
     chat_id, text, update_id, last_chat_name = get_last_id_text(get_updates())
 
-    while (text.lower() != 'start'):
+    while (text.lower() != 'english') and (text.lower() != 'tagalog'):
 
-        message = 'Please select Start, below'
-
-        reply_markup = reply_markup_maker(['Start'])
+        message = 'Please select language to proceed, below'
+        reply_markup = reply_markup_maker(['English', 'Tagalog'])
         send_message(chat_id, message, reply_markup)
 
         chat_id,text,update_id,last_chat_name = get_last_id_text(get_updates(update_id+1))
-
+        # sleep(0.5)
     return chat_id, text, update_id
 
+
+def find_table(chat_id, update_id, last_chat_name):
+
+    message = 'Please select below'
+    commands = ['Check Available', 'Go Back']
+    reply_markup = reply_markup_maker(commands)
+
+    send_message(chat_id, message, reply_markup)
+    chat_id, text, update_id, last_chat_name = get_last_id_text(get_updates(update_id + 1))
+
+    while (text.lower() == 'find a table'):
+        chat_id, text, update_id,last_chat_name = get_last_id_text(get_updates(update_id + 1))
+        sleep(0.5)
+
+    if text.lower() == 'check available':
+
+        message = 'Please select Timing'
+        commands = ["1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM"]
+        reply_markup = reply_markup_maker(commands)
+
+        send_message(chat_id, message, reply_markup)
+        chat_id, text, update_id,last_chat_name = get_last_id_text(get_updates(update_id + 1))
+
+        # Save to DB
+        insert_Record(chat_id,last_chat_name, text)
+        successful_notes(chat_id, last_chat_name)
+        sleep(0.5)
+
+    if text.lower() == 'go back':
+        text = 'start'
+        menu(chat_id, text, update_id, last_chat_name)
+
+def get_booked_table(chat_id, update_id, last_chat_name):
+
+    text = "Reserved List Record"
+    send_message(chat_id, text)
+
+    data = get_Record()
+    send_message(chat_id, data)
+
+    while (text.lower() == 'check reserved table'):
+        chat_id, text, update_id,last_chat_name = get_last_id_text(get_updates(update_id + 1))
+        sleep(0.5)
+
+    text = 'start'
+    menu(chat_id, text, update_id, last_chat_name)
 
 def end_note(chat_id, text, update_id, last_chat_name):
     message = '{}, Do you want to continue?'.format(last_chat_name)
@@ -193,12 +239,12 @@ def end_note(chat_id, text, update_id, last_chat_name):
     else:
         return 'n'
 
-
+# Main Menu
 def menu(chat_id, text, update_id, last_chat_name):
-    commands = ['news','weather']
+    commands = ['find a table','check reserved table', 'news', 'weather']
     welcome_bot(chat_id, commands, last_chat_name)
 
-    while (text.lower() == 'start'):
+    while (text.lower() == 'english'):
         chat_id, text, update_id,last_chat_name = get_last_id_text(get_updates(update_id + 1))
         sleep(0.5)
 
@@ -207,8 +253,14 @@ def menu(chat_id, text, update_id, last_chat_name):
         chat_id, text, update_id,last_chat_name = get_last_id_text(get_updates(update_id + 1))
         sleep(0.5)
 
-    if text.lower()=='news':
-        news_bot(chat_id,update_id, last_chat_name)
+    if text.lower() == 'find a table':
+        find_table(chat_id,update_id,last_chat_name)
+
+    elif text.lower() == 'check reserved table':
+        get_booked_table(chat_id,update_id,last_chat_name)
+
+    elif text.lower()=='news':
+        news_bot(chat_id, update_id,last_chat_name)
 
     elif text.lower()=='weather':
         weather_bot(chat_id, update_id, last_chat_name)
@@ -219,14 +271,20 @@ def main():
     text = ''
     chat_id, text, update_id, last_chat_name = get_last_id_text(get_updates())
     chat_id, text, update_id = start_bot(chat_id, last_chat_name)
-    # print('Started')
+
+    print("xxx", text)
 
     while text.lower() != 'n':
         sleep(1)
-        text = 'start'
-        menu(chat_id, text, update_id, last_chat_name)
-        text = 'n'
 
+        if text.lower() == 'tagalog':
+            text = "Awww! Tagalog is currently under construction, so let's stick to english language"
+            send_message(chat_id, text)
+
+        text = 'english'
+        menu(chat_id,text,update_id, last_chat_name)
+        text = 'n'
+        
         chat_id, text, update_id,last_chat_name = get_last_id_text(get_updates())
         text = end_note(chat_id, text, update_id, last_chat_name)
 

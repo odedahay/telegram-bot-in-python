@@ -2,8 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 
 def get_news():
-	url='http://www.straitstimes.com/container/custom-landing-page/breaking-news'
-	res=requests.get(url)
+	url = 'http://www.straitstimes.com/container/custom-landing-page/breaking-news'
+	res = requests.get(url)
 
 	while(res.status_code!=200):
 		try:
