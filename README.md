@@ -12,6 +12,10 @@ This is an exercise for building Chatbot using Telegram API with Python in webho
 ##### Currently this is working in my local server, virtualenv
 <img width="450" alt="screen shot 2017-11-28 at 1 48 18 pm" src="https://user-images.githubusercontent.com/11169820/33304326-163a752a-d443-11e7-9b9c-bc4726a62160.png">
 
+* source env/bin/activate
+* pip install -r requirements.txt
+* python demobot.py
+
 ##### And not yet deploy to my GAE console:
 ##### https://notebook-1263.appspot.com/
 
